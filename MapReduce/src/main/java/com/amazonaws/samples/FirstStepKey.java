@@ -7,8 +7,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.Text;
 
-import com.amazonaws.services.alexaforbusiness.model.Text;
 
 public class FirstStepKey implements WritableComparable<FirstStepKey> {
 	private Text firstWord;
@@ -21,10 +21,10 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		this.decade = new IntWritable();		
 	}
 	
-	public FirstStepKey( Text otherFirstWord, Text otherSecondWord, IntWritable otherYear) {
-		this.firstWord = otherFirstWord;
-		this.secondWord = otherSecondWord;
-		this.decade = otherYear;		
+	public void setFields(String otherFirstWord, String otherSecondWord, int otherDecade) {
+		this.firstWord.set(otherFirstWord);
+		this.secondWord.set(otherSecondWord);
+		this.decade.set(otherDecade);		
 	}
 	
 	public FirstStepKey( FirstStepKey otherFirstKey) {
@@ -65,10 +65,11 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 	}
 	
 	public String toString() {
-        return this.firstWord.toString() + " " + this.secondWord.toString() + " " + this.year.toString();
+        return this.firstWord.toString() + " " + this.secondWord.toString() + " " + this.decade.toString();
     }
 	
 	public int getCode() {
 		return firstWord.hashCode() + decade.hashCode();
 	}
+	
 }
