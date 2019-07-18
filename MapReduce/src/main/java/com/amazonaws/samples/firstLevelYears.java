@@ -22,30 +22,11 @@ import com.amazonaws.samples.FirstStepKey;
 
 public class firstLevelYears {
 
-	public static void main(String [] args) throws Exception
-	{
-		Configuration conf=new Configuration();
-		Path input=new Path("s3://amirtzurmapreduce/input2");
-		Path output=new Path("s3://amirtzurmapreduce/output/");
-
-		@SuppressWarnings("deprecation")
-		Job job=new Job(conf,"word pair");
-		job.setJarByClass(PairCount.class);
-		job.setMapperClass(MapForWordCount.class);
-		job.setReducerClass(ReduceForWordCount.class);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		FileInputFormat.addInputPath(job, input); 
-		FileOutputFormat.setOutputPath(job, output);
-		System.exit(job.waitForCompletion(true)?0:1);
-	}
-
 	public static class MapForWordCount extends Mapper<LongWritable, Text, FirstStepKey, IntWritable>{
 
 		//	private Text firstWordKey = new Text(); //structure (key = (firstWord,decade) value = decade)
 		//	private Text secondWordKey = new Text(); //structure (key = (firstWord,decade) value = numberOFApperances)
-	//	private Text PairKey = new Text(); //structure (key = (firstWord,secondWord,decade) value = numberOFApperances)
+		//	private Text PairKey = new Text(); //structure (key = (firstWord,secondWord,decade) value = numberOFApperances)
 		private int decade  = 0;
 		private FirstStepKey initialKey = new FirstStepKey();
 
@@ -59,20 +40,20 @@ public class firstLevelYears {
 			decade = (Integer.valueOf(tokenizer.nextToken().toString()))/10;
 			IntWritable numberofAppearences = new IntWritable (Integer.valueOf(tokenizer.nextToken().toString()));
 			//String numberofBooks = tokenizer.nextToken().toString();			
-			
+
 
 			initialKey.setFields(firstWord,secondWord, decade);
-		//	PairKey.set(firstWord + "," + secondWord + "," + decade);
+			//	PairKey.set(firstWord + "," + secondWord + "," + decade);
 			output.write(initialKey, numberofAppearences);
 
-
-		//	PairKey.set(firstWord + "," + "*," + decade);
-			initialKey.setFields(firstWord,"*", decade);
-			output.write(initialKey, numberofAppearences);
-
-		//	PairKey.set(secondWord + "," + "+," + decade);
-			initialKey.setFields(secondWord,"+", decade);
-			output.write(initialKey, numberofAppearences);
+			//
+			//		//	PairKey.set(firstWord + "," + "*," + decade);
+			//			initialKey.setFields(firstWord,"*", decade);
+			//			output.write(initialKey, numberofAppearences);
+			//
+			//		//	PairKey.set(secondWord + "," + "+," + decade);
+			//			initialKey.setFields(secondWord,"+", decade);
+			//			output.write(initialKey, numberofAppearences);
 
 		}
 	}
@@ -84,8 +65,7 @@ public class firstLevelYears {
 		return number;
 	}
 
-	public static class ReduceForWordCount extends Reducer<Text, IntWritable, FirstStepKey, IntWritable>
-	{
+	public static class ReduceForWordCount extends Reducer<Text, IntWritable, FirstStepKey, IntWritable>{
 		public void reduce(FirstStepKey word, Iterable<IntWritable> values, Context con) throws IOException, InterruptedException
 		{
 			int sum = 0;
@@ -95,6 +75,26 @@ public class firstLevelYears {
 			}
 			con.write(word, new IntWritable(sum));
 		}
+	}
+
+	public static void main(String [] args) throws Exception
+	{
+		Configuration conf=new Configuration();
+		Path input=new Path("s3://amirtzurmapreduce/input2");
+		Path output=new Path("s3://amirtzurmapreduce/output/");
+
+		@SuppressWarnings("deprecation")
+		Job job=new Job(conf,"firstLevelYears");
+		job.setJarByClass(firstLevelYears.class);
+		job.setMapperClass(MapForWordCount.class);
+		job.setReducerClass(ReduceForWordCount.class);
+		job.setOutputKeyClass(FirstStepKey.class);
+		job.setMapOutputKeyClass(FirstStepKey.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		FileInputFormat.addInputPath(job, input); 
+		FileOutputFormat.setOutputPath(job, output);
+		System.exit(job.waitForCompletion(true)?0:1);
 	}
 }
 
