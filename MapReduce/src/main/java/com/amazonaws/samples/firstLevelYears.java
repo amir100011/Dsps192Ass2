@@ -10,15 +10,16 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import com.amazonaws.samples.FirstStepKey;
 
 public class firstLevelYears {
 
@@ -35,7 +36,7 @@ public class firstLevelYears {
 			String line = nopunct(value.toString());
 			StringTokenizer tokenizer = new StringTokenizer(line);
 
-			String firstWord = tokenizer.toString();
+			String firstWord = tokenizer.nextToken().toString();
 			String secondWord = tokenizer.nextToken().toString();
 			decade = (Integer.valueOf(tokenizer.nextToken().toString()))/10;
 			IntWritable numberofAppearences = new IntWritable (Integer.valueOf(tokenizer.nextToken().toString()));
@@ -80,7 +81,7 @@ public class firstLevelYears {
 	public static void main(String [] args) throws Exception
 	{
 		Configuration conf=new Configuration();
-		Path input=new Path("s3://amirtzurmapreduce/input2");
+		Path input=new Path("s3://amirtzurmapreduce/input.txt");
 		Path output=new Path("s3://amirtzurmapreduce/output/");
 
 		@SuppressWarnings("deprecation")
@@ -91,7 +92,7 @@ public class firstLevelYears {
 		job.setOutputKeyClass(FirstStepKey.class);
 		job.setMapOutputKeyClass(FirstStepKey.class);
 		job.setOutputValueClass(IntWritable.class);
-		job.setInputFormatClass(SequenceFileInputFormat.class);
+		job.setInputFormatClass(TextInputFormat.class);//SequenceFileInputFormat
 		FileInputFormat.addInputPath(job, input); 
 		FileOutputFormat.setOutputPath(job, output);
 		System.exit(job.waitForCompletion(true)?0:1);
