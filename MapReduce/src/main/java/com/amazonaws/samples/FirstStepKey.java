@@ -64,31 +64,32 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		decade.write(out) ;
 
 	}
-
+	
+	@Override
 	public int compareTo(FirstStepKey otherFirstStepKey) {
 		int decadeCompared = this.decade.compareTo(otherFirstStepKey.getDecade());
 		if (decadeCompared != 0)
 			return decadeCompared;
 		else //same decade
 		{
-			if(this.firstWord.toString() == "*" || otherFirstStepKey.getFirstWord().toString() == "*") 
+			if(this.firstWord.toString().equals("*") || otherFirstStepKey.getFirstWord().toString().equals("*")) 
 			{
-				if(this.firstWord.toString() != "*")
+				if(!this.firstWord.toString().equals("*"))
 					return -1;
-				else if(otherFirstStepKey.getFirstWord().toString() != "*")
+				else if(!otherFirstStepKey.getFirstWord().toString().equals("*"))
 					return 1;
 				else
 					return this.secondWord.compareTo(otherFirstStepKey.getSecondWord());
 			} else{	
 				int firstWordCompared = this.firstWord.compareTo(otherFirstStepKey.getFirstWord());
-				if(this.secondWord.toString() == "*") 
+				if(this.secondWord.toString().equals("*")) 
 				{
-					if (otherFirstStepKey.getSecondWord().toString() != "*")
+					if (!otherFirstStepKey.getSecondWord().toString().equals("*"))
 						return firstWordCompared == 0 ? -1:firstWordCompared;
 					else
 						return -firstWordCompared;		
 				} else{//this.secondWord != "*"
-					if (otherFirstStepKey.getSecondWord().toString() == "*")
+					if (otherFirstStepKey.getSecondWord().toString().equals("*"))
 						return firstWordCompared == 0 ? 1:firstWordCompared;
 					else
 					{
@@ -105,7 +106,7 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 	}
 
 	public int getCode() {
-		return firstWord.hashCode() + decade.hashCode();
+		return firstWord.hashCode() + secondWord.hashCode() + decade.hashCode();
 	}
 
 }
