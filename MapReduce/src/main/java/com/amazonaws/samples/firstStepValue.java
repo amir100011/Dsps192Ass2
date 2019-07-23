@@ -51,5 +51,9 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 		}
 		return wordCompare;
 	}
+	
+	 public String toString() {
+	        return this.cW1.toString() + " " + this.cW1W2.toString();
+	    }
 
 }
