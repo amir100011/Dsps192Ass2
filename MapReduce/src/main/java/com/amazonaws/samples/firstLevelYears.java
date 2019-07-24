@@ -130,7 +130,7 @@ public class firstLevelYears {
 				CW1 = sum;
 			}else if(couple) {
 				FSValue.setValues(CW1, sum);
-				con.write(Key,FSValue);
+				con.write(new FirstStepKey(Key.getSecondWord().toString(),Key.getFirstWord().toString(),Key.getDecade()),FSValue);
 			}
 		}
 	}
