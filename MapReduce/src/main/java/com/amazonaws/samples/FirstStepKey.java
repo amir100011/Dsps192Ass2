@@ -97,33 +97,6 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 				}else
 					return firstwordcompare;				
 			}
-				
-//			if(this.firstWord.toString().equals("*") || otherFirstStepKey.getFirstWord().toString().equals("*")) 
-//			{
-//				if(!this.firstWord.toString().equals("*"))
-//					return -1;
-//				else if(!otherFirstStepKey.getFirstWord().toString().equals("*"))
-//					return 1;
-//				else
-//					return this.secondWord.compareTo(otherFirstStepKey.getSecondWord());
-//			} else{	
-//				int firstWordCompared = this.firstWord.compareTo(otherFirstStepKey.getFirstWord());
-//				if(this.secondWord.toString().equals("*")) 
-//				{
-//					if (!otherFirstStepKey.getSecondWord().toString().equals("*"))
-//						return firstWordCompared == 0 ? -1:firstWordCompared;
-//					else
-//						return -firstWordCompared;		
-//				} else{//this.secondWord != "*"
-//					if (otherFirstStepKey.getSecondWord().toString().equals("*"))
-//						return firstWordCompared == 0 ? 1:firstWordCompared;
-//					else
-//					{
-//						int secondWordCompared = this.secondWord.compareTo(otherFirstStepKey.getSecondWord());
-//						return firstWordCompared == 0 ? secondWordCompared:firstWordCompared;	
-//					}
-//				}
-//			}
 		}
 	}
 
@@ -132,7 +105,6 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 	}
 
 	public int getCode() {
-		return firstWord.hashCode() + decade.hashCode(); //  + secondWord.hashCode()
+		return firstWord.hashCode() + decade.hashCode();
 	}
-
 }

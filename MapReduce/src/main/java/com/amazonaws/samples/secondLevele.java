@@ -33,7 +33,7 @@ public class secondLevele {
 		private long CW2; // counter for reset W2
 		private long sumCw1; // counter for the first word
 		private long sumCw1w2; // counter for the couples
-		private int currentDecade = -1; // the current decade of the couples we process 
+		private int currentDecade = -10; // the current decade of the couples we process 
 		private double DecadeNpmi = 0; // counter for the npmi of the entire couples in the decade  
 
 		@Override
@@ -60,8 +60,10 @@ public class secondLevele {
 		{	
 			sumCw1=0;
 			sumCw1w2=0;
+			
+		//	con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), currentDecade, 100.0), new DoubleWritable(100.0));
 			//if we switch to another decade, send the total sum of the decade's npmi 
-			if(Key.getDecade().get() != currentDecade && currentDecade!= -1) {				
+			if(Key.getDecade().get() != currentDecade && currentDecade >= 0) {				
 				con.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
 				DecadeNpmi = 0;
 				currentDecade = Key.getDecade().get();

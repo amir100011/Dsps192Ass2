@@ -80,10 +80,10 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 	public int compareTo(secondStepKey other) {
 		int decadeCompare = this.decade.compareTo(other.getDecade());
 		if(decadeCompare == 0) {
-			if(this.firstWord.toString().equals("*") && !other.firstWord.toString().equals("*")) 
-				return 1;
-			else if(!this.firstWord.toString().equals("*") && other.firstWord.toString().equals("*"))
+			if(this.firstWord.toString().equals("*") && !other.getFirstWord().toString().equals("*")) 
 				return -1;
+			else if(!this.firstWord.toString().equals("*") && other.getFirstWord().toString().equals("*"))
+				return 1;				
 			else {
 				int npmiCompare = this.npmi.compareTo(other.getNpmi());
 				if(npmiCompare == 0) {

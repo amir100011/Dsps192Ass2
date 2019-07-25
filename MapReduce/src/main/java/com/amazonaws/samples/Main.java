@@ -52,14 +52,14 @@ public class Main {
 		        .withHadoopJarStep(hadoopJarStep2)
 		        .withActionOnFailure("TERMINATE_JOB_FLOW");
 		
-//	    HadoopJarStepConfig hadoopJarStep3 = new HadoopJarStepConfig()
-//	    		.withJar("s3n://ass2-bucket/jars/thirdJob.jar")
-//	    		.withArgs(uuid, minPmi, relMinPmi);
-//		           
-//		StepConfig stepConfig3 = new StepConfig()
-//				.withName("step3")
-//		        .withHadoopJarStep(hadoopJarStep3)
-//		        .withActionOnFailure("TERMINATE_JOB_FLOW");
+	    HadoopJarStepConfig hadoopJarStep3 = new HadoopJarStepConfig()
+	    		.withJar("s3n://amirtzurmapreduce/stepThree.jar")
+	    		.withArgs();
+		           
+		StepConfig stepConfig3 = new StepConfig()
+				.withName("step3")
+		        .withHadoopJarStep(hadoopJarStep3)
+		        .withActionOnFailure("TERMINATE_JOB_FLOW");
 	    
 		JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
 		    .withInstanceCount(5)
@@ -74,7 +74,7 @@ public class Main {
 		    .withName("ass2")
 		    .withReleaseLabel("emr-5.14.0")
 		    .withInstances(instances)
-		    .withSteps(stepConfig1, stepConfig2)
+		    .withSteps(stepConfig1, stepConfig2, stepConfig3)
 		    .withLogUri("s3n://amirtzurmapreduce/logs/")
 		    .withJobFlowRole("EMR_ROLE")
 		    .withServiceRole("EMR_REG");

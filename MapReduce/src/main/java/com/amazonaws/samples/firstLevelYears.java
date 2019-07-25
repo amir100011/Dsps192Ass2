@@ -14,15 +14,10 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.samples.FirstJob.CombinerClass;
-import com.amazonaws.samples.FirstJob.MapperClass;
-import com.amazonaws.samples.FirstJob.PartitionerClass;
-import com.amazonaws.samples.FirstJob.ReducerClass;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -32,12 +27,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 
 
 public class firstLevelYears {
 
-	public static class MapForWordCount extends Mapper<LongWritable, Text, FirstStepKey, IntWritable>{
+	public static class MapForWordCount extends Mapper<LongWritable, Text, FirstStepKey, LongWritable>{
 		
 		private int decade  = 0;
 		private FirstStepKey initialKey;
@@ -53,7 +47,7 @@ public class firstLevelYears {
 				String secondWord = tokenizer.nextToken().toString();
 				
 				decade = (Integer.valueOf(tokenizer.nextToken().toString()))/10;
-				IntWritable numberofAppearences = new IntWritable (Integer.valueOf(tokenizer.nextToken().toString()));	
+				LongWritable numberofAppearences = new LongWritable (Integer.valueOf(tokenizer.nextToken().toString()));	
 				IntWritable Decade = new IntWritable(decade);
 
 				initialKey = new FirstStepKey(firstWord,secondWord, Decade);
@@ -84,7 +78,7 @@ public class firstLevelYears {
 		return number;
 	}
 
-	public static class ReduceForWordCount extends Reducer<FirstStepKey, IntWritable, FirstStepKey, firstStepValue>{
+	public static class ReduceForWordCount extends Reducer<FirstStepKey, LongWritable, FirstStepKey, firstStepValue>{
 
 		private AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
 		private firstStepValue FSValue = new firstStepValue();
@@ -97,7 +91,7 @@ public class firstLevelYears {
 		int sum;
 
 		@Override
-		public void reduce(FirstStepKey Key, Iterable<IntWritable> values, Context con) throws IOException, InterruptedException
+		public void reduce(FirstStepKey Key, Iterable<LongWritable> values, Context con) throws IOException, InterruptedException
 		{
 			//System.out.println(Key.getFirstWord() + " " + Key.getSecondWord() + " " + Key.getDecade());
 			
@@ -106,7 +100,7 @@ public class firstLevelYears {
 			secWord = (Key.getFirstWord().toString().equals("*")) && (!Key.getSecondWord().toString().equals("*"));
 			firstWord = (!Key.getFirstWord().toString().equals("*") ) && (Key.getSecondWord().toString().equals("*"));
 			couple = (!Key.getFirstWord().toString().equals("*") ) && (!Key.getSecondWord().toString().equals("*"));
-			for(IntWritable value : values)
+			for(LongWritable value : values)
 			{
 				System.out.println(value);
 				sum += value.get();
@@ -150,9 +144,9 @@ public class firstLevelYears {
 		job.setPartitionerClass(PartitionerClass.class);
 		job.setReducerClass(ReduceForWordCount.class);
 		job.setOutputKeyClass(FirstStepKey.class);
-	//	job.setCombinerClass(CombinerClass.class);
+		job.setCombinerClass(CombinerClass.class);
 		job.setMapOutputKeyClass(FirstStepKey.class);
-		job.setOutputValueClass(IntWritable.class);
+		job.setOutputValueClass(LongWritable.class);
 		job.setInputFormatClass(TextInputFormat.class);//SequenceFileInputFormat
 		FileInputFormat.addInputPath(job, input); 
 		FileOutputFormat.setOutputPath(job, output);
@@ -160,29 +154,29 @@ public class firstLevelYears {
 		
 	}
 	
-	 public static class PartitionerClass extends Partitioner<FirstStepKey,IntWritable> {
+	 public static class PartitionerClass extends Partitioner<FirstStepKey,LongWritable> {
 		 
 			@Override
-			public int getPartition(FirstStepKey key, IntWritable value, int num) {
+			public int getPartition(FirstStepKey key, LongWritable value, int num) {
 				return Math.abs(key.getCode()) % num; 
 			}  
 	    }
 	 
 
-//		public static class CombinerClass extends Reducer<FirstJobKey,IntWritable,FirstJobKey,IntWritable> {
-//
-//			private IntWritable occurrences = new IntWritable();
-//
-//			@Override
-//			public void reduce(FirstJobKey key, Iterable<IntWritable> values, Context context) throws IOException,  InterruptedException {
-//				int newOccurrences = 0;
-//				for (IntWritable value : values) {
-//					newOccurrences += value.get();
-//				}
-//				this.occurrences.set(newOccurrences);
-//				context.write(key, this.occurrences);  
-//			}
-//		}
+		public static class CombinerClass extends Reducer<FirstStepKey,LongWritable,FirstStepKey,LongWritable> {
+
+			private LongWritable occurrences = new LongWritable();
+
+			@Override
+			public void reduce(FirstStepKey key, Iterable<LongWritable> values, Context context) throws IOException,  InterruptedException {
+				long newOccurrences = 0;
+				for (LongWritable value : values) {
+					newOccurrences += value.get();
+				}
+				this.occurrences.set(newOccurrences);
+				context.write(key, this.occurrences);  
+			}
+		}
 }
 
 
