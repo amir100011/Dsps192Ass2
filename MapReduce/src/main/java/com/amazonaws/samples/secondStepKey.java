@@ -32,6 +32,13 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		  this.npmi = new DoubleWritable(nmpi);
 	}
 	
+	public secondStepKey(Text fw, Text sw, IntWritable dec,DoubleWritable nmpi ) {
+		this.firstWord = new Text(fw.toString());
+		  this.secondWord = new Text(sw.toString());
+		  this.decade = new IntWritable(dec.get());
+		  this.npmi = new DoubleWritable(nmpi.get());
+	}	
+	
 	public void SetsecondStepKeyValues(Text fw, Text sw, IntWritable dec,DoubleWritable nmpi ) {
 		  this.firstWord =fw;
 		  this.secondWord =sw;

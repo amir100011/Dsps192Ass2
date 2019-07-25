@@ -113,14 +113,13 @@ public class firstLevelYears {
 			}
 
 			if (total) {
-				String path = con.getConfiguration().get("tempFilesPath");
-				String file = "";
-				InputStream is = new ByteArrayInputStream( file.getBytes());
-				ObjectMetadata metadata = new ObjectMetadata();
-				metadata.setContentLength(file.getBytes().length);
-				String resultFileName = Key.getDecade().toString() + "@" + sum;
-				PutObjectRequest req = new PutObjectRequest(path, resultFileName, is ,metadata);       
-				s3.putObject(req);   
+        		String path = con.getConfiguration().get("tempFilesPath");
+        		String file = "";
+        		InputStream is = new ByteArrayInputStream( file.getBytes());
+    	        ObjectMetadata metadata = new ObjectMetadata();
+    	        metadata.setContentLength(file.getBytes().length);
+    	        PutObjectRequest req = new PutObjectRequest(path, Key.getDecade().toString() + " " + sum, is ,metadata);       
+        	    s3.putObject(req);   
 				
 			}else if(secWord) {
 				FSKey = new FirstStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), Key.getDecade());
@@ -141,7 +140,7 @@ public class firstLevelYears {
 		Path input=new Path("s3://amirtzurmapreduce/input.txt");
 		Path output=new Path("s3://amirtzurmapreduce/output/");
 		
-		String tempFilesPath = "amirtzurmapreduce/N/";
+		String tempFilesPath = "amirtzurmapreduce/N/" + 1;
 		conf.set("tempFilesPath", tempFilesPath);
 
 		@SuppressWarnings("deprecation")

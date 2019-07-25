@@ -33,15 +33,12 @@ public class secondLevele {
 		private long CW2; // counter for reset W2
 		private long sumCw1; // counter for the first word
 		private long sumCw1w2; // counter for the couples
-		private int currentDecade; // the current decade of the couples we process 
-		private long DecadeNpmi; // counter for the npmi of the entire couples in the decade  
+		private int currentDecade = -1; // the current decade of the couples we process 
+		private double DecadeNpmi = 0; // counter for the npmi of the entire couples in the decade  
 
 		@Override
-		public void setup(Reducer<FirstStepKey, firstStepValue, secondStepKey, DoubleWritable>.Context context)
+		public void setup(Context context)
 				throws IOException, InterruptedException {
-			super.setup(context);
-			currentDecade =-1; // initial value
-			DecadeNpmi = 0; // initial value
 			decadeMap = new HashMap<Integer,Long>(); // create the table of the N in each decade
 			AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
 			String path = context.getConfiguration().get("tempFilesPath");
@@ -53,7 +50,7 @@ public class secondLevele {
 					String filename = filePath.split("/")[2];
 					int decade = Integer.parseInt((filename.split(" ")[0]));
 					long occurrences = Long.parseLong((filename.split(" ")[1]));
-					decadeMap.put(decade, occurrences);
+					decadeMap.put(decade, occurrences);					
 				}
 			}			
 		}		  
@@ -61,13 +58,13 @@ public class secondLevele {
 		@Override
 		public void reduce(FirstStepKey Key, Iterable<firstStepValue> values, Context con) throws IOException, InterruptedException
 		{	
-
 			sumCw1=0;
 			sumCw1w2=0;
 			//if we switch to another decade, send the total sum of the decade's npmi 
 			if(Key.getDecade().get() != currentDecade && currentDecade!= -1) {				
-				DecadeNpmi = 12345;
 				con.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
+				DecadeNpmi = 0;
+				currentDecade = Key.getDecade().get();
 				
 			}			
 			for(firstStepValue value : values) // sums the elements in the list of values for the current key 
@@ -79,10 +76,14 @@ public class secondLevele {
 				CW2 = sumCw1;
 				sumCw1w2 = 0;
 				currentDecade = Key.getDecade().get();
-			}else { // if we received a couple to calculate it's npmi 
-				double npmi = npmi(sumCw1,CW2,sumCw1w2,decadeMap.get(Key.getDecade().get())); //npmi calculating
+			}else { // if we received a couple to calculate it's npmi
+				long N = decadeMap.get(Key.getDecade().get());
+				double pmi = pmi(sumCw1, CW2, sumCw1w2,N); //npmi calculating
+				double normalizer = normalizer(sumCw1w2,N);
+				double logPw1w2 = Math.log10(normalizer); 
+				double npmi = pmi/(-logPw1w2); //log(1/x) = -log(x)
 				currentDecade = Key.getDecade().get();
-				con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(),currentDecade,npmi), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
+				con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), currentDecade, npmi), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
 				DecadeNpmi += npmi; // adding to the sum of decade's npmi
 			}
 		}
@@ -91,19 +92,18 @@ public class secondLevele {
 			context.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
 		}
 
-		public double npmi(long Cw1, long Cw2, long Cw1w2, long N ) {
-			if (Cw1w2 == 0 || Cw2 ==0 || Cw1w2 ==0 ||  N == 0 )
-				return 0.123456789;
-			double pmi = (Math.log(Cw1w2)+Math.log(N)-Math.log(Cw1) -Math.log(Cw1));
-			double normelaizer = Cw1w2/N;
-	        if (normelaizer == 0.0) 
-	        	normelaizer = 0.01;
-	        else if (normelaizer == 1.0) 
-	        	normelaizer = 0.99;
-			double logPw1w2 = -Math.log(normelaizer); 
-			if (logPw1w2 == 0)
-				return 0.123456789;//don't enter that thing
-			return pmi/logPw1w2; 
+		public double pmi(double Cw1, double Cw2, double Cw1w2, double N ) {
+			double pmi = (Math.log10(Cw1w2) + Math.log10(N) + Math.log10(1/Cw1) + Math.log10(1/Cw2));
+			return pmi;
+		}
+		
+		public double normalizer(double Cw1w2, double N ) {
+			double normalizer = Cw1w2/N;
+	        if (normalizer  == 0.0) 
+	        	normalizer = 0.00001;
+	        else if (normalizer == 1.0) 
+	        	normalizer = 0.99999;
+			return normalizer;
 		}
 	}
 
@@ -111,9 +111,9 @@ public class secondLevele {
 	{
 		Configuration conf=new Configuration();
 		Path input=new Path("s3://amirtzurmapreduce/output/");
-		Path output=new Path("s3://amirtzurmapreduce/output/Step2/");
+		Path output=new Path("s3://amirtzurmapreduce/outputStep2/");
 
-		String tempFilesPath = "amirtzurmapreduce/N/";
+		String tempFilesPath = "N/" + 1;
 		conf.set("tempFilesPath", tempFilesPath);
 
 		Job job = Job.getInstance(conf, "secondLevele");
@@ -130,6 +130,7 @@ public class secondLevele {
 		FileOutputFormat.setOutputPath(job, output);
 		System.exit(job.waitForCompletion(true)?0:1);
 		while(true);
+		
 
 	}
 
