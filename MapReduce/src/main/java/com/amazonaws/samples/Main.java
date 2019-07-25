@@ -26,7 +26,7 @@ public class Main {
 	    //String bigramUrl = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/2gram/data";
 		
 		// get AWS credentials
-    	AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
+		AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
     	
     	AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder
     			.standard()
@@ -75,9 +75,9 @@ public class Main {
 		    .withReleaseLabel("emr-5.14.0")
 		    .withInstances(instances)
 		    .withSteps(stepConfig1, stepConfig2)
-		    .withLogUri("s3n://ass2-bucket/logs/")
+		    .withLogUri("s3n://amirtzurmapreduce/logs/")
 		    .withJobFlowRole("EMR_ROLE")
-		    .withServiceRole("EMR_ROLE");
+		    .withServiceRole("EMR_REG");
 		 
 		RunJobFlowResult runJobFlowResult = mapReduce.runJobFlow(runFlowRequest);
 		String jobFlowId = runJobFlowResult.getJobFlowId();

@@ -17,10 +17,15 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 		this.cW1W2 = new LongWritable(0);
 	}
 
+	public firstStepValue(LongWritable cw1, LongWritable cw1w2) {
+		this.cW1 = new LongWritable(cw1.get());
+		this.cW1W2 = new LongWritable(cw1w2.get());
+	}
+	
 	public void setValues(long cw1, long cw1w2) {
 		this.cW1 = new LongWritable(cw1);
-		this.cW1W2 = new LongWritable(cw1);
-	}
+		this.cW1W2 = new LongWritable(cw1w2);
+	}	
 
 	public LongWritable getCW1() {
 		return this.cW1;

@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
@@ -15,23 +16,23 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 	private Text firstWord;
 	private Text secondWord;
 	private IntWritable decade;
-	private LongWritable npmi;
+	private DoubleWritable npmi;
 	
 	public secondStepKey() {
 		  this.firstWord = new Text();
 		  this.secondWord = new Text();
 		  this.decade = new IntWritable(0);
-		  this.npmi = new LongWritable(0);
+		  this.npmi = new DoubleWritable(0);
 	}
 	
-	public secondStepKey(String otherFirstWord, String otherSecondWord, int dec,long nmpi) {
+	public secondStepKey(String otherFirstWord, String otherSecondWord, int dec,double nmpi) {
 		  this.firstWord = new Text(otherFirstWord);
 		  this.secondWord = new Text(otherSecondWord);
 		  this.decade = new IntWritable(dec);
-		  this.npmi = new LongWritable(nmpi);
+		  this.npmi = new DoubleWritable(nmpi);
 	}
 	
-	public void SetsecondStepKeyValues(Text fw, Text sw, IntWritable dec,LongWritable nmpi ) {
+	public void SetsecondStepKeyValues(Text fw, Text sw, IntWritable dec,DoubleWritable nmpi ) {
 		  this.firstWord =fw;
 		  this.secondWord =sw;
 		  this.decade =dec;
@@ -50,7 +51,7 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		return this.decade;
 	}
 	
-	public LongWritable getNpmi() {
+	public DoubleWritable getNpmi() {
 		return this.npmi;
 	}
 	
@@ -91,7 +92,7 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 	}
 	
 	public String toString() {
-		return this.firstWord.toString() + " " + this.secondWord.toString() + " " + this.decade.toString();
+		return this.firstWord.toString() + " " + this.secondWord.toString() + " " + this.decade.toString() + " " + this.npmi.toString();
 	}
 
 	public int getCode() {

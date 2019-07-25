@@ -21,6 +21,12 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		this.decade = new IntWritable();		
 	}
 	
+	public FirstStepKey(Text otherFirstWord, Text otherSecondWord, IntWritable otherDecade) {
+		this.firstWord = new Text(otherFirstWord.toString());
+		this.secondWord = new Text(otherSecondWord.toString());
+		this.decade = new IntWritable(otherDecade.get());		
+	}
+	
 	public FirstStepKey(String otherFirstWord, String otherSecondWord, IntWritable otherDecade) {
 		this.firstWord = new Text(otherFirstWord);
 		this.secondWord = new Text(otherSecondWord);
