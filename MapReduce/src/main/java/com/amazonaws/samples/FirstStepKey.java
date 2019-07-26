@@ -20,13 +20,13 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		this.secondWord = new Text();
 		this.decade = new IntWritable();		
 	}
-	
+
 	public FirstStepKey(Text otherFirstWord, Text otherSecondWord, IntWritable otherDecade) {
 		this.firstWord = new Text(otherFirstWord.toString());
 		this.secondWord = new Text(otherSecondWord.toString());
 		this.decade = new IntWritable(otherDecade.get());		
 	}
-	
+
 	public FirstStepKey(String otherFirstWord, String otherSecondWord, IntWritable otherDecade) {
 		this.firstWord = new Text(otherFirstWord);
 		this.secondWord = new Text(otherSecondWord);
@@ -56,7 +56,7 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 	public IntWritable getDecade() {
 		return this.decade;
 	}
-	
+
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		((Writable) firstWord).readFields(in) ;
@@ -64,7 +64,7 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		decade.readFields(in) ;
 
 	}
-	
+
 	@Override
 	public void write(DataOutput out) throws IOException {
 		((Writable) firstWord).write(out) ;
@@ -72,7 +72,7 @@ public class FirstStepKey implements WritableComparable<FirstStepKey> {
 		decade.write(out) ;
 
 	}
-	
+
 	@Override
 	public int compareTo(FirstStepKey otherFirstStepKey) {
 		int decadeCompared = this.decade.compareTo(otherFirstStepKey.getDecade());

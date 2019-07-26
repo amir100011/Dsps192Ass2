@@ -12,7 +12,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 public class step2InputFormat extends FileInputFormat<FirstStepKey, firstStepValue> {
-	
+
 	@Override
 	public RecordReader<FirstStepKey, firstStepValue> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException {
@@ -20,13 +20,13 @@ public class step2InputFormat extends FileInputFormat<FirstStepKey, firstStepVal
 	}
 
 	@Override
-    protected boolean isSplitable(JobContext context, Path file) {
-        CompressionCodec codec =
-          new CompressionCodecFactory(context.getConfiguration()).getCodec(file);
-        return codec == null;
-      }
-	
-	
+	protected boolean isSplitable(JobContext context, Path file) {
+		CompressionCodec codec =
+				new CompressionCodecFactory(context.getConfiguration()).getCodec(file);
+		return codec == null;
+	}
+
+
 
 }
 

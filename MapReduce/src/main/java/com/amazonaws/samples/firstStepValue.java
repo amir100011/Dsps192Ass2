@@ -10,8 +10,8 @@ import org.apache.hadoop.io.WritableComparable;
 public class firstStepValue implements WritableComparable<firstStepValue> { 
 	private LongWritable cW1;
 	private LongWritable cW1W2;
-	
-	
+
+
 	public firstStepValue() {
 		this.cW1 = new LongWritable(0);
 		this.cW1W2 = new LongWritable(0);
@@ -21,7 +21,7 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 		this.cW1 = new LongWritable(cw1.get());
 		this.cW1W2 = new LongWritable(cw1w2.get());
 	}
-	
+
 	public void setValues(long cw1, long cw1w2) {
 		this.cW1 = new LongWritable(cw1);
 		this.cW1W2 = new LongWritable(cw1w2);
@@ -39,14 +39,14 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 		// TODO Auto-generated method stub
 		cW1W2.write(out);
 		cW1.write(out);
-		
+
 	}
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		// TODO Auto-generated method stub
 		cW1W2.readFields(in);
 		cW1.readFields(in);
-		
+
 	}
 	@Override
 	public int compareTo(firstStepValue o) {
@@ -56,9 +56,9 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 		}
 		return wordCompare;
 	}
-	
-	 public String toString() {
-	        return this.cW1.toString() + " " + this.cW1W2.toString();
-	    }
+
+	public String toString() {
+		return this.cW1.toString() + " " + this.cW1W2.toString();
+	}
 
 }

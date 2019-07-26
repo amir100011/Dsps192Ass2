@@ -32,7 +32,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 public class firstLevelYears {
 
 	public static class MapForWordCount extends Mapper<LongWritable, Text, FirstStepKey, LongWritable>{
-		
+
 		private int decade  = 0;
 		private FirstStepKey initialKey;
 
@@ -45,7 +45,7 @@ public class firstLevelYears {
 			while(tokenizer.hasMoreTokens()) {
 				String firstWord = tokenizer.nextToken().toString();
 				String secondWord = tokenizer.nextToken().toString();
-				
+
 				decade = (Integer.valueOf(tokenizer.nextToken().toString()))/10;
 				LongWritable numberofAppearences = new LongWritable (Integer.valueOf(tokenizer.nextToken().toString()));	
 				IntWritable Decade = new IntWritable(decade);
@@ -56,7 +56,7 @@ public class firstLevelYears {
 
 
 				initialKey = new FirstStepKey(firstWord,"*", Decade);
-			//	initialKey.setFields(firstWord,"*", decade);
+				//	initialKey.setFields(firstWord,"*", decade);
 				output.write(initialKey, numberofAppearences);
 
 				initialKey = new FirstStepKey("*",secondWord, Decade);
@@ -94,7 +94,7 @@ public class firstLevelYears {
 		public void reduce(FirstStepKey Key, Iterable<LongWritable> values, Context con) throws IOException, InterruptedException
 		{
 			//System.out.println(Key.getFirstWord() + " " + Key.getSecondWord() + " " + Key.getDecade());
-			
+
 			sum = 0;
 			total = (Key.getFirstWord().toString().equals("*")) && (Key.getSecondWord().toString().equals("*"));
 			secWord = (Key.getFirstWord().toString().equals("*")) && (!Key.getSecondWord().toString().equals("*"));
@@ -107,14 +107,14 @@ public class firstLevelYears {
 			}
 
 			if (total) {
-        		String path = con.getConfiguration().get("tempFilesPath");
-        		String file = "";
-        		InputStream is = new ByteArrayInputStream( file.getBytes());
-    	        ObjectMetadata metadata = new ObjectMetadata();
-    	        metadata.setContentLength(file.getBytes().length);
-    	        PutObjectRequest req = new PutObjectRequest(path, Key.getDecade().toString() + " " + sum, is ,metadata);       
-        	    s3.putObject(req);   
-				
+				String path = con.getConfiguration().get("tempFilesPath");
+				String file = "";
+				InputStream is = new ByteArrayInputStream( file.getBytes());
+				ObjectMetadata metadata = new ObjectMetadata();
+				metadata.setContentLength(file.getBytes().length);
+				PutObjectRequest req = new PutObjectRequest(path, Key.getDecade().toString() + " " + sum, is ,metadata);       
+				s3.putObject(req);   
+
 			}else if(secWord) {
 				FSKey = new FirstStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), Key.getDecade());
 				FSValue.setValues(sum, 0);
@@ -133,7 +133,7 @@ public class firstLevelYears {
 		Configuration conf=new Configuration();
 		Path input=new Path("s3://amirtzurmapreduce/input.txt");
 		Path output=new Path("s3://amirtzurmapreduce/output/");
-		
+
 		String tempFilesPath = "amirtzurmapreduce/N/" + 1;
 		conf.set("tempFilesPath", tempFilesPath);
 
@@ -151,32 +151,32 @@ public class firstLevelYears {
 		FileInputFormat.addInputPath(job, input); 
 		FileOutputFormat.setOutputPath(job, output);
 		System.exit(job.waitForCompletion(true)?0:1);
-		
+
 	}
-	
-	 public static class PartitionerClass extends Partitioner<FirstStepKey,LongWritable> {
-		 
-			@Override
-			public int getPartition(FirstStepKey key, LongWritable value, int num) {
-				return Math.abs(key.getCode()) % num; 
-			}  
-	    }
-	 
 
-		public static class CombinerClass extends Reducer<FirstStepKey,LongWritable,FirstStepKey,LongWritable> {
+	public static class PartitionerClass extends Partitioner<FirstStepKey,LongWritable> {
 
-			private LongWritable occurrences = new LongWritable();
+		@Override
+		public int getPartition(FirstStepKey key, LongWritable value, int num) {
+			return Math.abs(key.getCode()) % num; 
+		}  
+	}
 
-			@Override
-			public void reduce(FirstStepKey key, Iterable<LongWritable> values, Context context) throws IOException,  InterruptedException {
-				long newOccurrences = 0;
-				for (LongWritable value : values) {
-					newOccurrences += value.get();
-				}
-				this.occurrences.set(newOccurrences);
-				context.write(key, this.occurrences);  
+
+	public static class CombinerClass extends Reducer<FirstStepKey,LongWritable,FirstStepKey,LongWritable> {
+
+		private LongWritable occurrences = new LongWritable();
+
+		@Override
+		public void reduce(FirstStepKey key, Iterable<LongWritable> values, Context context) throws IOException,  InterruptedException {
+			long newOccurrences = 0;
+			for (LongWritable value : values) {
+				newOccurrences += value.get();
 			}
+			this.occurrences.set(newOccurrences);
+			context.write(key, this.occurrences);  
 		}
+	}
 }
 
 

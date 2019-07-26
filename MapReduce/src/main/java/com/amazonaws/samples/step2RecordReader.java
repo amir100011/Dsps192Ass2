@@ -11,34 +11,34 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
 public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue> {
-			
+
 	FirstStepKey key;
 	firstStepValue value;
-    LineRecordReader reader;
+	LineRecordReader reader;
 
 	@Override
 	public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
 		reader.initialize(split, context);
 	}
-	
-    public step2RecordReader() {
-        reader = new LineRecordReader(); 
-    }
+
+	public step2RecordReader() {
+		reader = new LineRecordReader(); 
+	}
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
-    	if (!reader.nextKeyValue()) {
-            return false;
-        }
-        String line = reader.getCurrentValue().toString();
-        if(line.length()==0)
-        	return false;
-        String[] keyValue = line.split("\t");
-        String[] keyFields = keyValue[0].split(" ");
-        String[] valueFields = keyValue[1].split(" ");
-        key = new FirstStepKey(new Text(keyFields[0]), new Text(keyFields[1]), new IntWritable(Integer.parseInt(keyFields[2])));
-        value = new firstStepValue(new LongWritable(Integer.parseInt(valueFields[0])),new LongWritable(Integer.parseInt(valueFields[1])));
-        return true;
+		if (!reader.nextKeyValue()) {
+			return false;
+		}
+		String line = reader.getCurrentValue().toString();
+		if(line.length()==0)
+			return false;
+		String[] keyValue = line.split("\t");
+		String[] keyFields = keyValue[0].split(" ");
+		String[] valueFields = keyValue[1].split(" ");
+		key = new FirstStepKey(new Text(keyFields[0]), new Text(keyFields[1]), new IntWritable(Integer.parseInt(keyFields[2])));
+		value = new firstStepValue(new LongWritable(Integer.parseInt(valueFields[0])),new LongWritable(Integer.parseInt(valueFields[1])));
+		return true;
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue
 		reader.close();
 
 	}
-	
-	
-	
+
+
+
 }

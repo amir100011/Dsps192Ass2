@@ -34,7 +34,7 @@ public class thirdStep {
 	}
 
 	public static class ReduceForWordCount extends Reducer<secondStepKey, DoubleWritable, Text, Text>{
-		
+
 		private double decadeNpmi=0; // to sum all nmpi of couples in a certain decade 
 		private double coupleNpmi=0; // to sum all nmpi of a certain couple
 		private double minPmi;
@@ -46,10 +46,10 @@ public class thirdStep {
 			this.minPmi = 0.5;//Double.parseDouble(context.getConfiguration().get("minPmi"));
 			this.relMinPmi = 0.2; // = Double.parseDouble(context.getConfiguration().get("relMinPmi"));
 		}
-		
+
 		public void reduce(secondStepKey Key, Iterable<DoubleWritable> values, Context con) throws IOException, InterruptedException{
 
-		
+
 			coupleNpmi = 0;
 			for(DoubleWritable value : values) // sums the elements in the list of values for the current key 
 			{
@@ -66,25 +66,25 @@ public class thirdStep {
 					npmiText = new Text("npmi: " + mResult +" relative npmi: " + rResult);
 					con.write(keyText,npmiText);
 					//con.write(keyText,new Text(Double.toString(decadeNpmi)));
-					
 
-					
+
+
 				}				
 			}			
 		}
 	}
-	
-	 public static class CombinerClass extends Reducer<secondStepKey, DoubleWritable, secondStepKey, DoubleWritable> {
 
-			@Override
-	        public void reduce(secondStepKey key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
-	       		double sum = 0;
-	        	for (DoubleWritable value : values) {
-	        			sum += value.get();
-	        	}
- 			context.write(key, new DoubleWritable(sum));   	
+	public static class CombinerClass extends Reducer<secondStepKey, DoubleWritable, secondStepKey, DoubleWritable> {
+
+		@Override
+		public void reduce(secondStepKey key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
+			double sum = 0;
+			for (DoubleWritable value : values) {
+				sum += value.get();
 			}
-	    }
+			context.write(key, new DoubleWritable(sum));   	
+		}
+	}
 
 	public static class PartitionerClass extends Partitioner<secondStepKey,DoubleWritable> {
 
