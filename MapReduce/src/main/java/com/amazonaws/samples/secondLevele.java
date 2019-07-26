@@ -33,8 +33,8 @@ public class secondLevele {
 		private long CW2; // counter for reset W2
 		private long sumCw1; // counter for the first word
 		private long sumCw1w2; // counter for the couples
-		private int currentDecade = -10; // the current decade of the couples we process 
-		private double DecadeNpmi = 0; // counter for the npmi of the entire couples in the decade  
+		//private int currentDecade = -10; // the current decade of the couples we process 
+		//private double DecadeNpmi = 0; // counter for the npmi of the entire couples in the decade  
 
 		@Override
 		public void setup(Context context)
@@ -63,12 +63,12 @@ public class secondLevele {
 			
 		//	con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), currentDecade, 100.0), new DoubleWritable(100.0));
 			//if we switch to another decade, send the total sum of the decade's npmi 
-			if(Key.getDecade().get() != currentDecade && currentDecade >= 0) {				
-				con.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
-				DecadeNpmi = 0;
-				currentDecade = Key.getDecade().get();
-				
-			}			
+//			if(Key.getDecade().get() != currentDecade && currentDecade >= 0) {				
+//				con.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
+//				DecadeNpmi = 0;
+//				currentDecade = Key.getDecade().get();
+//				
+//			}			
 			for(firstStepValue value : values) // sums the elements in the list of values for the current key 
 			{
 				sumCw1 += value.getCW1().get();
@@ -77,22 +77,23 @@ public class secondLevele {
 			if(Key.getSecondWord().toString().equals("*")) { // if we received a new second word counter 
 				CW2 = sumCw1;
 				sumCw1w2 = 0;
-				currentDecade = Key.getDecade().get();
+				//currentDecade = Key.getDecade().get();
 			}else { // if we received a couple to calculate it's npmi
 				long N = decadeMap.get(Key.getDecade().get());
 				double pmi = pmi(sumCw1, CW2, sumCw1w2,N); //npmi calculating
 				double normalizer = normalizer(sumCw1w2,N);
 				double logPw1w2 = Math.log10(normalizer); 
 				double npmi = pmi/(-logPw1w2); //log(1/x) = -log(x)
-				currentDecade = Key.getDecade().get();
-				con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), currentDecade, npmi), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
-				DecadeNpmi += npmi; // adding to the sum of decade's npmi
+//				currentDecade = Key.getDecade().get();
+				con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), Key.getDecade().get(), npmi), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
+				con.write(new secondStepKey("*", "*", Key.getDecade().get(), 0), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
+//				DecadeNpmi += npmi; // adding to the sum of decade's npmi
 			}
 		}
-		@Override
-		public void cleanup(Reducer<FirstStepKey, firstStepValue, secondStepKey, DoubleWritable>.Context context) throws IOException, InterruptedException {
-			context.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
-		}
+//		@Override
+//		public void cleanup(Reducer<FirstStepKey, firstStepValue, secondStepKey, DoubleWritable>.Context context) throws IOException, InterruptedException {
+//			context.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
+//		}
 
 		public double pmi(double Cw1, double Cw2, double Cw1w2, double N ) {
 			double pmi = (Math.log10(Cw1w2) + Math.log10(N) + Math.log10(1/Cw1) + Math.log10(1/Cw2));

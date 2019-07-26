@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.Text;
@@ -67,6 +66,7 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		((Writable) firstWord).readFields(in) ;
 		((Writable) secondWord).readFields(in) ;
 		decade.readFields(in) ;
+		npmi.readFields(in) ;
 
 	}
 	@Override
@@ -74,28 +74,62 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		((Writable) firstWord).write(out) ;
 		((Writable) secondWord).write(out) ;
 		decade.write(out) ;
+		npmi.write(out) ;
 		}
 
 	@Override
 	public int compareTo(secondStepKey other) {
-		int decadeCompare = this.decade.compareTo(other.getDecade());
-		if(decadeCompare == 0) {
-			if(this.firstWord.toString().equals("*") && !other.getFirstWord().toString().equals("*")) 
-				return -1;
-			else if(!this.firstWord.toString().equals("*") && other.getFirstWord().toString().equals("*"))
-				return 1;				
-			else {
-				int npmiCompare = this.npmi.compareTo(other.getNpmi());
-				if(npmiCompare == 0) {
-					int firstWordCompare = this.firstWord.compareTo(other.getFirstWord());
-					if(firstWordCompare == 0)
-						return this.secondWord.compareTo(other.getSecondWord());
-					return firstWordCompare;
-				}
-				return npmiCompare;
-			}
-		}
-		return decadeCompare;		
+		//-1 --> my decade is smaller I will be first, 0 - equal, 1 - my decade is bigger I will be later on
+
+		
+		//increasing
+		int decadeCompare = checkDecade(this.decade,other.decade); 
+		if(decadeCompare != 0)
+			return decadeCompare;
+		
+		boolean doubleStar = doubleStarCheck(this, other);
+		if (doubleStar)
+			return 0;
+		
+		boolean hasaStar = starCheck(this, other);
+		if (hasaStar)
+			return starOrder(this,other);
+		
+		//decending
+		int npmiComapre = checkNPMI(this.npmi, other.getNpmi());
+		if(npmiComapre != 0)
+			return -npmiComapre;
+		
+		return (checkWords(this, other));
+	}
+	
+	public int checkDecade(IntWritable mine, IntWritable other) {
+		return mine.get() == other.get() ? 0:(mine.get() < other.get() ? -1:1); 
+	}
+	
+	public boolean doubleStarCheck(secondStepKey mine, secondStepKey other) {
+		return mine.getFirstWord().toString().equals("*") &&  other.getFirstWord().toString().equals("*");
+
+	}
+	
+	public boolean starCheck(secondStepKey mine, secondStepKey other) {
+		return mine.getFirstWord().toString().equals("*") ||  other.getFirstWord().toString().equals("*");
+
+	}
+	
+	public int starOrder(secondStepKey mine, secondStepKey other) {
+		return (!mine.getFirstWord().toString().equals("*") && other.getFirstWord().toString().equals("*")) ? 1:-1;
+	}
+	
+	public int checkNPMI(DoubleWritable mine, DoubleWritable other) {
+		return mine.get() == other.get() ? 0:(mine.get() < other.get() ? -1:1); 
+	}
+	
+	public int checkWords(secondStepKey mine, secondStepKey other) {
+		int firstWordComparison = mine.getFirstWord().toString().compareTo(other.getFirstWord().toString());
+		if(firstWordComparison != 0)
+			return firstWordComparison;
+		return mine.getSecondWord().toString().compareTo(other.getSecondWord().toString());
 	}
 	
 	public String toString() {
