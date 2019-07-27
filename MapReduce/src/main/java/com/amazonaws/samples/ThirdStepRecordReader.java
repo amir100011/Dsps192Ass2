@@ -1,19 +1,18 @@
 package com.amazonaws.samples;
 
+
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
-public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue> {
+public class ThirdStepRecordReader extends RecordReader<SecondStepKey, DoubleWritable> {
 
-	FirstStepKey key;
-	firstStepValue value;
+	SecondStepKey key;
+	DoubleWritable value;
 	LineRecordReader reader;
 
 	@Override
@@ -21,7 +20,7 @@ public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue
 		reader.initialize(split, context);
 	}
 
-	public step2RecordReader() {
+	public ThirdStepRecordReader() {
 		reader = new LineRecordReader(); 
 	}
 
@@ -36,18 +35,18 @@ public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue
 		String[] keyValue = line.split("\t");
 		String[] keyFields = keyValue[0].split(" ");
 		String[] valueFields = keyValue[1].split(" ");
-		key = new FirstStepKey(new Text(keyFields[0]), new Text(keyFields[1]), new IntWritable(Integer.parseInt(keyFields[2])));
-		value = new firstStepValue(new LongWritable(Integer.parseInt(valueFields[0])),new LongWritable(Integer.parseInt(valueFields[1])));
+		key = new SecondStepKey(keyFields[0],keyFields[1], Integer.parseInt(keyFields[2]),Double.parseDouble(keyFields[3]));
+		value = new DoubleWritable(Double.parseDouble(valueFields[0])); 
 		return true;
 	}
 
 	@Override
-	public FirstStepKey getCurrentKey() throws IOException, InterruptedException {
+	public SecondStepKey getCurrentKey() throws IOException, InterruptedException {
 		return key;
 	}
 
 	@Override
-	public firstStepValue getCurrentValue() throws IOException, InterruptedException {
+	public DoubleWritable getCurrentValue() throws IOException, InterruptedException {
 		return value;
 	}
 
@@ -61,7 +60,5 @@ public class step2RecordReader extends RecordReader<FirstStepKey, firstStepValue
 		reader.close();
 
 	}
-
-
 
 }

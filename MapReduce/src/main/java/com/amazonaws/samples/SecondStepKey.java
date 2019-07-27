@@ -10,28 +10,28 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.Text;
 
-public class secondStepKey implements WritableComparable<secondStepKey> {
+public class SecondStepKey implements WritableComparable<SecondStepKey> {
 
 	private Text firstWord;
 	private Text secondWord;
 	private IntWritable decade;
 	private DoubleWritable npmi;
 
-	public secondStepKey() {
+	public SecondStepKey() {
 		this.firstWord = new Text();
 		this.secondWord = new Text();
 		this.decade = new IntWritable(0);
 		this.npmi = new DoubleWritable(0);
 	}
 
-	public secondStepKey(String otherFirstWord, String otherSecondWord, int dec,double nmpi) {
+	public SecondStepKey(String otherFirstWord, String otherSecondWord, int dec,double nmpi) {
 		this.firstWord = new Text(otherFirstWord);
 		this.secondWord = new Text(otherSecondWord);
 		this.decade = new IntWritable(dec);
 		this.npmi = new DoubleWritable(nmpi);
 	}
 
-	public secondStepKey(Text fw, Text sw, IntWritable dec,DoubleWritable nmpi ) {
+	public SecondStepKey(Text fw, Text sw, IntWritable dec,DoubleWritable nmpi ) {
 		this.firstWord = new Text(fw.toString());
 		this.secondWord = new Text(sw.toString());
 		this.decade = new IntWritable(dec.get());
@@ -78,7 +78,7 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 	}
 
 	@Override
-	public int compareTo(secondStepKey other) {
+	public int compareTo(SecondStepKey other) {
 		//-1 --> my decade is smaller I will be first, 0 - equal, 1 - my decade is bigger I will be later on
 
 
@@ -107,17 +107,17 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		return mine.get() == other.get() ? 0:(mine.get() < other.get() ? -1:1); 
 	}
 
-	public boolean doubleStarCheck(secondStepKey mine, secondStepKey other) {
+	public boolean doubleStarCheck(SecondStepKey mine, SecondStepKey other) {
 		return mine.getFirstWord().toString().equals("*") &&  other.getFirstWord().toString().equals("*");
 
 	}
 
-	public boolean starCheck(secondStepKey mine, secondStepKey other) {
+	public boolean starCheck(SecondStepKey mine, SecondStepKey other) {
 		return mine.getFirstWord().toString().equals("*") ||  other.getFirstWord().toString().equals("*");
 
 	}
 
-	public int starOrder(secondStepKey mine, secondStepKey other) {
+	public int starOrder(SecondStepKey mine, SecondStepKey other) {
 		return (!mine.getFirstWord().toString().equals("*") && other.getFirstWord().toString().equals("*")) ? 1:-1;
 	}
 
@@ -125,7 +125,7 @@ public class secondStepKey implements WritableComparable<secondStepKey> {
 		return mine.get() == other.get() ? 0:(mine.get() < other.get() ? -1:1); 
 	}
 
-	public int checkWords(secondStepKey mine, secondStepKey other) {
+	public int checkWords(SecondStepKey mine, SecondStepKey other) {
 		int firstWordComparison = mine.getFirstWord().toString().compareTo(other.getFirstWord().toString());
 		if(firstWordComparison != 0)
 			return firstWordComparison;

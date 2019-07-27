@@ -18,23 +18,21 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 
 
-public class secondLevele {
-	public static class MapForWordCount extends Mapper<FirstStepKey, firstStepValue, FirstStepKey, firstStepValue>{		
-		//no need to cmmit any action, the given <Key,Set> elements are already ready
-		public void map(FirstStepKey key, firstStepValue value, Context con) throws IOException, InterruptedException
+public class SecondLevel {
+	public static class MapForWordCount extends Mapper<FirstStepKey, FirstStepValue, FirstStepKey, FirstStepValue>{		
+		//no need to commit any action, the given <Key,Set> elements are already ready
+		public void map(FirstStepKey key, FirstStepValue value, Context con) throws IOException, InterruptedException
 		{
 			con.write(key, value);
 		}
 	}
 
-	public static class ReduceForWordCount extends Reducer<FirstStepKey, firstStepValue, secondStepKey, DoubleWritable>{
+	public static class ReduceForWordCount extends Reducer<FirstStepKey, FirstStepValue, SecondStepKey, DoubleWritable>{
 
 		private HashMap<Integer,Long> decadeMap; // the growing rate of decade is a lot lower then that of the <Key,Value> pairs
 		private long CW2; // counter for reset W2
 		private long sumCw1; // counter for the first word
 		private long sumCw1w2; // counter for the couples
-		//private int currentDecade = -10; // the current decade of the couples we process 
-		//private double DecadeNpmi = 0; // counter for the npmi of the entire couples in the decade  
 
 		@Override
 		public void setup(Context context)
@@ -42,7 +40,7 @@ public class secondLevele {
 			decadeMap = new HashMap<Integer,Long>(); // create the table of the N in each decade
 			AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
 			String path = context.getConfiguration().get("tempFilesPath");
-			ObjectListing olist = s3.listObjects("amirtzurmapreduce", path);
+			ObjectListing olist = s3.listObjects("amirtsurmapreduce", path);
 			for (S3ObjectSummary summary : olist.getObjectSummaries()) {
 				String filePath = summary.getKey();
 				String[] filePathArr = filePath.split("/");
@@ -56,20 +54,12 @@ public class secondLevele {
 		}		  
 
 		@Override
-		public void reduce(FirstStepKey Key, Iterable<firstStepValue> values, Context con) throws IOException, InterruptedException
+		public void reduce(FirstStepKey Key, Iterable<FirstStepValue> values, Context con) throws IOException, InterruptedException
 		{	
 			sumCw1=0;
 			sumCw1w2=0;
 
-			//	con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), currentDecade, 100.0), new DoubleWritable(100.0));
-			//if we switch to another decade, send the total sum of the decade's npmi 
-			//			if(Key.getDecade().get() != currentDecade && currentDecade >= 0) {				
-			//				con.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
-			//				DecadeNpmi = 0;
-			//				currentDecade = Key.getDecade().get();
-			//				
-			//			}			
-			for(firstStepValue value : values) // sums the elements in the list of values for the current key 
+			for(FirstStepValue value : values) // sums the elements in the list of values for the current key 
 			{
 				sumCw1 += value.getCW1().get();
 				sumCw1w2 += value.getCW1W2().get();
@@ -84,16 +74,11 @@ public class secondLevele {
 				double normalizer = normalizer(sumCw1w2,N);
 				double logPw1w2 = Math.log10(normalizer); 
 				double npmi = pmi/(-logPw1w2); //log(1/x) = -log(x)
-				//				currentDecade = Key.getDecade().get();
-				con.write(new secondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), Key.getDecade().get(), npmi), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
-				con.write(new secondStepKey("*", "*", Key.getDecade().get(), 0), new DoubleWritable(npmi)); // switches the w1 and w2 to return to the original couple
-				//				DecadeNpmi += npmi; // adding to the sum of decade's npmi
+				// switches the w1 and w2 to return to the original couple
+				con.write(new SecondStepKey(Key.getSecondWord().toString(), Key.getFirstWord().toString(), Key.getDecade().get(), npmi), new DoubleWritable(npmi)); 
+				con.write(new SecondStepKey("*", "*", Key.getDecade().get(), 0), new DoubleWritable(npmi)); 
 			}
 		}
-		//		@Override
-		//		public void cleanup(Reducer<FirstStepKey, firstStepValue, secondStepKey, DoubleWritable>.Context context) throws IOException, InterruptedException {
-		//			context.write(new secondStepKey("*", "*",currentDecade,DecadeNpmi), new DoubleWritable(DecadeNpmi));
-		//		}
 
 		public double pmi(double Cw1, double Cw2, double Cw1w2, double N ) {
 			double pmi = (Math.log10(Cw1w2) + Math.log10(N) + Math.log10(1/Cw1) + Math.log10(1/Cw2));
@@ -113,22 +98,23 @@ public class secondLevele {
 	public static void main(String [] args) throws Exception
 	{
 		Configuration conf=new Configuration();
-		Path input=new Path("s3://amirtzurmapreduce/output/");
-		Path output=new Path("s3://amirtzurmapreduce/outputStep2/");
+		Path input=new Path("s3://amirtsurmapreduce/FirstLevelOutput/");
+		Path output=new Path("s3://amirtsurmapreduce/SecondStepOutput/");
 
-		String tempFilesPath = "N/" + 1;
+		String uuid = args[0];
+		String tempFilesPath = "tempFiles/" + uuid;
 		conf.set("tempFilesPath", tempFilesPath);
 
-		Job job = Job.getInstance(conf, "secondLevele");
-		job.setJarByClass(secondLevele.class);
+		Job job = Job.getInstance(conf, "SecondLevel");
+		job.setJarByClass(SecondLevel.class);
 		job.setMapperClass(MapForWordCount.class);
 		job.setPartitionerClass(PartitionerClass.class);
 		job.setReducerClass(ReduceForWordCount.class);
 		job.setMapOutputKeyClass(FirstStepKey.class);
-		job.setMapOutputValueClass(firstStepValue.class);
-		job.setOutputKeyClass(secondStepKey.class);
+		job.setMapOutputValueClass(FirstStepValue.class);
+		job.setOutputKeyClass(SecondStepKey.class);
 		job.setOutputValueClass(DoubleWritable.class);
-		job.setInputFormatClass(step2InputFormat.class);//SequenceFileInputFormat
+		job.setInputFormatClass(SecondStepInputFormat.class);
 		FileInputFormat.addInputPath(job, input); 
 		FileOutputFormat.setOutputPath(job, output);
 		System.exit(job.waitForCompletion(true)?0:1);
@@ -137,30 +123,13 @@ public class secondLevele {
 
 	}
 
-	public static class PartitionerClass extends Partitioner<FirstStepKey,firstStepValue> {
+	public static class PartitionerClass extends Partitioner<FirstStepKey,FirstStepValue> {
 
 		@Override
-		public int getPartition(FirstStepKey key, firstStepValue value, int num) {
+		public int getPartition(FirstStepKey key, FirstStepValue value, int num) {
 			return Math.abs(key.getCode()) % num; 
 		}  
 	}
-
-
-	//		public static class CombinerClass extends Reducer<FirstJobKey,IntWritable,FirstJobKey,IntWritable> {
-	//
-	//			private IntWritable occurrences = new IntWritable();
-	//
-	//			@Override
-	//			public void reduce(FirstJobKey key, Iterable<IntWritable> values, Context context) throws IOException,  InterruptedException {
-	//				int newOccurrences = 0;
-	//				for (IntWritable value : values) {
-	//					newOccurrences += value.get();
-	//				}
-	//				this.occurrences.set(newOccurrences);
-	//				context.write(key, this.occurrences);  
-	//			}
-	//		}
-
 }
 
 

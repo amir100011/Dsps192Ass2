@@ -7,17 +7,17 @@ import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.WritableComparable;
 
-public class firstStepValue implements WritableComparable<firstStepValue> { 
+public class FirstStepValue implements WritableComparable<FirstStepValue> { 
 	private LongWritable cW1;
 	private LongWritable cW1W2;
 
 
-	public firstStepValue() {
+	public FirstStepValue() {
 		this.cW1 = new LongWritable(0);
 		this.cW1W2 = new LongWritable(0);
 	}
 
-	public firstStepValue(LongWritable cw1, LongWritable cw1w2) {
+	public FirstStepValue(LongWritable cw1, LongWritable cw1w2) {
 		this.cW1 = new LongWritable(cw1.get());
 		this.cW1W2 = new LongWritable(cw1w2.get());
 	}
@@ -36,20 +36,18 @@ public class firstStepValue implements WritableComparable<firstStepValue> {
 	}
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
 		cW1W2.write(out);
 		cW1.write(out);
 
 	}
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		// TODO Auto-generated method stub
 		cW1W2.readFields(in);
 		cW1.readFields(in);
 
 	}
 	@Override
-	public int compareTo(firstStepValue o) {
+	public int compareTo(FirstStepValue o) {
 		int wordCompare = this.cW1W2.compareTo(o.getCW1W2());
 		if( wordCompare == 0) {
 			return this.cW1.compareTo(o.getCW1());

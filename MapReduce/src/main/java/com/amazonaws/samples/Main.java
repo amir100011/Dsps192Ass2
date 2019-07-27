@@ -20,10 +20,14 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		//		String uuid = UUID.randomUUID().toString();
-		//		String minPmi = args[0];
-		//		String relMinPmi = args[1];
-		//String bigramUrl = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/2gram/data";
+		String uuid = UUID.randomUUID().toString();
+		//String minPmi = args[0];
+		//String relMinPmi = args[1];
+		String minPmi = "0.5";
+		String relMinPmi = "0.2";
+		String bigramUrl = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/2gram/data";
+		//String bigramUrl = "s3://amirtsurmapreduce/input.txt";
+
 
 		// get AWS credentials
 		AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
@@ -35,8 +39,8 @@ public class Main {
 				.build();
 
 		HadoopJarStepConfig hadoopJarStep1 = new HadoopJarStepConfig()
-				.withJar("s3n://amirtzurmapreduce/stepOne.jar")
-				.withArgs(); 
+				.withJar("s3n://amirtsurmapreduce/stepOne.jar")
+				.withArgs(bigramUrl,uuid); 
 
 		StepConfig stepConfig1 = new StepConfig()
 				.withName("step1")
@@ -44,8 +48,8 @@ public class Main {
 				.withActionOnFailure("TERMINATE_JOB_FLOW");
 
 		HadoopJarStepConfig hadoopJarStep2 = new HadoopJarStepConfig()
-				.withJar("s3n://amirtzurmapreduce/stepTwo.jar")
-				.withArgs();
+				.withJar("s3n://amirtsurmapreduce/stepTwo.jar")
+				.withArgs(uuid);
 
 		StepConfig stepConfig2 = new StepConfig()
 				.withName("step2")
@@ -53,8 +57,8 @@ public class Main {
 				.withActionOnFailure("TERMINATE_JOB_FLOW");
 
 		HadoopJarStepConfig hadoopJarStep3 = new HadoopJarStepConfig()
-				.withJar("s3n://amirtzurmapreduce/stepThree.jar")
-				.withArgs();
+				.withJar("s3n://amirtsurmapreduce/stepThree.jar")
+				.withArgs(minPmi,relMinPmi);
 
 		StepConfig stepConfig3 = new StepConfig()
 				.withName("step3")
@@ -65,7 +69,7 @@ public class Main {
 				.withInstanceCount(5)
 				.withMasterInstanceType(InstanceType.M1Xlarge.toString())
 				.withSlaveInstanceType(InstanceType.M1Xlarge.toString())
-				.withHadoopVersion("2.6.0")
+				.withHadoopVersion("2.2.0")
 				.withKeepJobFlowAliveWhenNoSteps(false)
 				.withEc2KeyName("amazonKey")
 				.withPlacement(new PlacementType("us-east-1a"));
@@ -75,7 +79,7 @@ public class Main {
 				.withReleaseLabel("emr-5.14.0")
 				.withInstances(instances)
 				.withSteps(stepConfig1, stepConfig2, stepConfig3)
-				.withLogUri("s3n://amirtzurmapreduce/logs/")
+				.withLogUri("s3n://amirtsurmapreduce/logs/")
 				.withJobFlowRole("EMR_ROLE")
 				.withServiceRole("EMR_REG");
 

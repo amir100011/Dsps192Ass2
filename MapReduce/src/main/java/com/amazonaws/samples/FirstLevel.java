@@ -3,10 +3,6 @@ package com.amazonaws.samples;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -14,7 +10,9 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+
+
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import com.amazonaws.regions.Regions;
@@ -29,7 +27,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 
 
-public class firstLevelYears {
+public class FirstLevel {
 
 	public static class MapForWordCount extends Mapper<LongWritable, Text, FirstStepKey, LongWritable>{
 
@@ -38,50 +36,37 @@ public class firstLevelYears {
 
 		public void map(LongWritable key, Text value, Context output) throws IOException, InterruptedException
 		{
-			String line = nopunct(value.toString());
-			StringTokenizer tokenizer = new StringTokenizer(line);
+			// value format is : ngram TAB year TAB match_count TAB volume_count NEWLINE
+			String valueSplited[] = value.toString().split("\t");
+			String ngram[] = valueSplited[0].split(" ");
+			if(ngram.length != 2) return;
+			//Replacing all non-alphanumeric characters with empty strings
+			String firstWord = ngram[0].replaceAll("[^A-Za-z0-9]","").toLowerCase();
+			String secondWord = ngram[1].replaceAll("[^A-Za-z0-9]","").toLowerCase();
+			IntWritable Decade = new IntWritable(((Integer.parseInt(valueSplited[1]))/10)*10);
+			LongWritable numberofAppearences = new LongWritable (Long.parseLong(valueSplited[2]));	
+
+			initialKey = new FirstStepKey(firstWord,secondWord, Decade);
+			output.write(initialKey, numberofAppearences);
 
 
-			while(tokenizer.hasMoreTokens()) {
-				String firstWord = tokenizer.nextToken().toString();
-				String secondWord = tokenizer.nextToken().toString();
+			initialKey = new FirstStepKey(firstWord,"*", Decade);
+			output.write(initialKey, numberofAppearences);
 
-				decade = (Integer.valueOf(tokenizer.nextToken().toString()))/10;
-				LongWritable numberofAppearences = new LongWritable (Integer.valueOf(tokenizer.nextToken().toString()));	
-				IntWritable Decade = new IntWritable(decade);
+			initialKey = new FirstStepKey("*",secondWord, Decade);
+			output.write(initialKey, numberofAppearences);
 
-				initialKey = new FirstStepKey(firstWord,secondWord, Decade);
-				//initialKey.setFields(firstWord,secondWord, decade);
-				output.write(initialKey, numberofAppearences);
+			initialKey = new FirstStepKey("*","*", Decade);
+			output.write(initialKey, numberofAppearences);
 
-
-				initialKey = new FirstStepKey(firstWord,"*", Decade);
-				//	initialKey.setFields(firstWord,"*", decade);
-				output.write(initialKey, numberofAppearences);
-
-				initialKey = new FirstStepKey("*",secondWord, Decade);
-				//initialKey.setFields("*", secondWord, decade);
-				output.write(initialKey, numberofAppearences);
-
-				initialKey = new FirstStepKey("*","*", Decade);
-				//initialKey.setFields("*", "*", decade);
-				output.write(initialKey, numberofAppearences);
-
-			}
 		}
 	}
 
-	public static String nopunct(String s) {
-		Pattern pattern = Pattern.compile("[^0-9 a-z A-Z]");
-		Matcher matcher = pattern.matcher(s);
-		String number = matcher.replaceAll(" ");
-		return number;
-	}
 
-	public static class ReduceForWordCount extends Reducer<FirstStepKey, LongWritable, FirstStepKey, firstStepValue>{
+	public static class ReduceForWordCount extends Reducer<FirstStepKey, LongWritable, FirstStepKey, FirstStepValue>{
 
 		private AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
-		private firstStepValue FSValue = new firstStepValue();
+		private FirstStepValue FSValue = new FirstStepValue();
 		private FirstStepKey FSKey;
 		private long CW1;
 		private boolean total ;
@@ -93,7 +78,6 @@ public class firstLevelYears {
 		@Override
 		public void reduce(FirstStepKey Key, Iterable<LongWritable> values, Context con) throws IOException, InterruptedException
 		{
-			//System.out.println(Key.getFirstWord() + " " + Key.getSecondWord() + " " + Key.getDecade());
 
 			sum = 0;
 			total = (Key.getFirstWord().toString().equals("*")) && (Key.getSecondWord().toString().equals("*"));
@@ -128,32 +112,6 @@ public class firstLevelYears {
 		}
 	}
 
-	public static void main(String [] args) throws Exception
-	{
-		Configuration conf=new Configuration();
-		Path input=new Path("s3://amirtzurmapreduce/input.txt");
-		Path output=new Path("s3://amirtzurmapreduce/output/");
-
-		String tempFilesPath = "amirtzurmapreduce/N/" + 1;
-		conf.set("tempFilesPath", tempFilesPath);
-
-		@SuppressWarnings("deprecation")
-		Job job=new Job(conf,"firstLevelYears");
-		job.setJarByClass(firstLevelYears.class);
-		job.setMapperClass(MapForWordCount.class);
-		job.setPartitionerClass(PartitionerClass.class);
-		job.setReducerClass(ReduceForWordCount.class);
-		job.setOutputKeyClass(FirstStepKey.class);
-		job.setCombinerClass(CombinerClass.class);
-		job.setMapOutputKeyClass(FirstStepKey.class);
-		job.setOutputValueClass(LongWritable.class);
-		job.setInputFormatClass(TextInputFormat.class);//SequenceFileInputFormat
-		FileInputFormat.addInputPath(job, input); 
-		FileOutputFormat.setOutputPath(job, output);
-		System.exit(job.waitForCompletion(true)?0:1);
-
-	}
-
 	public static class PartitionerClass extends Partitioner<FirstStepKey,LongWritable> {
 
 		@Override
@@ -176,6 +134,33 @@ public class firstLevelYears {
 			this.occurrences.set(newOccurrences);
 			context.write(key, this.occurrences);  
 		}
+	}
+
+	public static void main(String [] args) throws Exception
+	{
+		Configuration conf=new Configuration();
+		Path input=new Path(args[0]);
+		Path output=new Path("s3://amirtsurmapreduce/FirstLevelOutput/");
+
+		String uuid = args[1];
+
+		String tempFilesPath = "amirtsurmapreduce/tempFiles/" + uuid;
+		conf.set("tempFilesPath", tempFilesPath);
+
+		Job job = Job.getInstance(conf,"FirstLevel");
+		job.setJarByClass(FirstLevel.class);
+		job.setMapperClass(MapForWordCount.class);
+		job.setPartitionerClass(PartitionerClass.class);
+		job.setReducerClass(ReduceForWordCount.class);
+		job.setOutputKeyClass(FirstStepKey.class);
+		job.setCombinerClass(CombinerClass.class);
+		job.setMapOutputKeyClass(FirstStepKey.class);
+		job.setOutputValueClass(LongWritable.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);//TextInputFormat
+		FileInputFormat.addInputPath(job, input); 
+		FileOutputFormat.setOutputPath(job, output);
+		System.exit(job.waitForCompletion(true)?0:1);
+
 	}
 }
 
