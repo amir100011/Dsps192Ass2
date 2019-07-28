@@ -21,10 +21,10 @@ public class Main {
 	public static void main(String[] args) {
 
 		String uuid = UUID.randomUUID().toString();
-		//String minPmi = args[0];
-		//String relMinPmi = args[1];
-		String minPmi = "0.5";
-		String relMinPmi = "0.2";
+		String minPmi = args[0];
+		String relMinPmi = args[1];
+//		String minPmi = "0.5";
+//		String relMinPmi = "0.2";
 		String bigramUrl = "s3://datasets.elasticmapreduce/ngrams/books/20090715/eng-us-all/2gram/data";
 		//String bigramUrl = "s3://amirtsurmapreduce/input.txt";
 
